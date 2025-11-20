@@ -22,6 +22,11 @@ from pathlib import Path
 from typing import Sequence, Tuple, Optional
 from PIL import Image, ImageDraw, ImageFont
 from wei_utils import get_agent_config
+try:
+    from azure_compat import AzureCamelAgent
+except ImportError:
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    from azure_compat import AzureCamelAgent
 
 
 def extract_json_block(text: str, first_only: bool = True):
@@ -38,12 +43,15 @@ def extract_beamer_code(tex_str):
 def latex_code_gen_upgrade(prompt_path, tex_dir, beamer_save_path, 
                            model_config_ll, model_config_vl,
                            beamer_temp_name=None, if_fix=True, if_tree_search=True):
-    model = ModelFactory.create(
-        model_platform=model_config_ll["model_platform"],
-        model_type=model_config_ll["model_type"],
-        model_config_dict=model_config_ll.get("model_config"),
-        url=model_config_ll.get("url", None),)
-    agent = ChatAgent(model=model, system_message="",)
+    if model_config_ll.get("is_azure_custom"):
+        agent = AzureCamelAgent(model_type=model_config_ll["model_type"], model_config_dict=model_config_ll.get("model_config"))
+    else:
+        model = ModelFactory.create(
+            model_platform=model_config_ll["model_platform"],
+            model_type=model_config_ll["model_type"],
+            model_config_dict=model_config_ll.get("model_config"),
+            url=model_config_ll.get("url", None),)
+        agent = ChatAgent(model=model, system_message="",)
     with open(prompt_path, 'r', encoding='utf-8') as f_prompt: templete_prompt = f_prompt.read()
     token_usage = {}
     ## paper latex code input
@@ -132,12 +140,15 @@ def improve_layout(code, feedback, beamer_save_path, model_config):
     #     idx, refined_code, usage_improve = result
     #     frames[frame_idx]["text"] = refined_code
     #     token_usage_improve.append(usage_improve)
-    imporve_model = ModelFactory.create(
-        model_platform=model_config["model_platform"],
-        model_type=model_config["model_type"],
-        model_config_dict=model_config.get("model_config"),
-        url=model_config.get("url", None),)
-    imporve_agent = ChatAgent(model=imporve_model, system_message="",)
+    if model_config.get("is_azure_custom"):
+        imporve_agent = AzureCamelAgent(model_type=model_config["model_type"], model_config_dict=model_config.get("model_config"))
+    else:
+        imporve_model = ModelFactory.create(
+            model_platform=model_config["model_platform"],
+            model_type=model_config["model_type"],
+            model_config_dict=model_config.get("model_config"),
+            url=model_config.get("url", None),)
+        imporve_agent = ChatAgent(model=imporve_model, system_message="",)
     proposal_tmp_dir = path.join(path.dirname(beamer_save_path), 'proposal_imgs')
     os.makedirs(proposal_tmp_dir, exist_ok=True)
     factors = [1, 0.75, 0.5, 0.25]
@@ -195,12 +206,15 @@ def improve_layout(code, feedback, beamer_save_path, model_config):
 def improve_per_slide(data):
     idx, model_config, template_prompt, head, frame = data
     ## model for selecting the proposed result
-    imporve_model = ModelFactory.create(
-        model_platform=model_config["model_platform"],
-        model_type=model_config["model_type"],
-        model_config_dict=model_config.get("model_config"),
-        url=model_config.get("url", None),)
-    imporve_agent = ChatAgent(model=imporve_model, system_message="",)
+    if model_config.get("is_azure_custom"):
+        imporve_agent = AzureCamelAgent(model_type=model_config["model_type"], model_config_dict=model_config.get("model_config"))
+    else:
+        imporve_model = ModelFactory.create(
+            model_platform=model_config["model_platform"],
+            model_type=model_config["model_type"],
+            model_config_dict=model_config.get("model_config"),
+            url=model_config.get("url", None),)
+        imporve_agent = ChatAgent(model=imporve_model, system_message="",)
     factors = [1, 0.75, 0.5, 0.25]
     map_dic = {"A": 0, "B": 1, "C": 2, "D": 3}
     proposal_tmp_dir = path.join(path.dirname(beamer_save_path), 'proposal_imgs_'+str(idx))

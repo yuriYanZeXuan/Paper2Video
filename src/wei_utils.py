@@ -134,6 +134,13 @@ def get_agent_config(model_type):
             "model_config": ChatGPTConfig().as_dict(),
             "model_platform": ModelPlatformType.OPENAI,
         }
+    elif model_type == 'azure-gpt-4o' or model_type == 'azure-4o':
+        agent_config = {
+            "model_type": "gpt-4o",
+            "model_platform": "azure_custom",
+            "model_config": ChatGPTConfig().as_dict(),
+            "is_azure_custom": True
+        }
     elif model_type == 'gpt-5':
         agent_config = {
             "model_type": ModelType.GPT_5,
