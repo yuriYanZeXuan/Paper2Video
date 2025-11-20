@@ -38,7 +38,13 @@ def copy_folder(src_dir, dst_dir):
     os.makedirs(os.path.dirname(dst_dir), exist_ok=True)
     shutil.copytree(src_dir, dst_dir)
 
-def str2list(s): return [int(x) for x in s.split(',')]
+def str2list(s):
+    if not s:
+        return []
+    s = s.strip("[]")
+    if not s:
+        return []
+    return [int(x) for x in s.split(',')]
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Paper2Video Generation Pipeline')
