@@ -107,7 +107,7 @@ def latex_code_gen_upgrade(prompt_path, tex_dir, beamer_save_path,
     else:
         return token_usage, beamer_save_path.replace(".tex", ".pdf")
 
-select_proposal_prompt_path = "prompts/select_proposal.txt"
+select_proposal_prompt_path = "src/prompts/select_proposal.txt"
 def improve_layout(code, feedback, beamer_save_path, model_config):
     with open(select_proposal_prompt_path, 'r') as f: template_prompt = f.read()
     token_usage_improve = []
@@ -575,7 +575,7 @@ def compute_frame_spans(code: str):
     return frames
 
 ## fix the grammer error with complie error
-correct_prompt_path = "./prompts/slide_beamer_correct.txt"
+correct_prompt_path = "./src/prompts/slide_beamer_correct.txt"
 def correcte_error(beamer_code, error_info, agent):
     with open(correct_prompt_path, 'r', encoding='utf-8') as f_prompt: templete_prompt = f_prompt.read()
     inference_prompt = (
