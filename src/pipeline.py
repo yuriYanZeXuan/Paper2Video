@@ -15,7 +15,7 @@ import os, sys
 import argparse
 import subprocess
 from os import path
-from pdf2image import convert_from_path
+import fitz
 
 
 from speech_gen import tts_per_slide
@@ -103,8 +103,12 @@ if __name__ == '__main__':
             paper_latex_path = path.join(args.paper_latex_root, "main.tex") 
             usage_slide = latex_code_gen(prompt_path=prompt_path, tex_dir=args.paper_latex_root, tex_path=paper_latex_path, beamer_save_path=slide_latex_path, model_config=agent_config_t)
             
-        slide_imgs = convert_from_path(beamer_path, dpi=400)
-        for i, img in enumerate(slide_imgs): img.save(path.join(slide_image_dir, f"{i+1}.png")) # save slides as images
+        with fitz.open(beamer_path) as doc:
+            for i, page in enumerate(doc):
+                scale = 400 / 72.0
+                mat = fitz.Matrix(scale, scale)
+                pix = page.get_pixmap(matrix=mat)
+                pix.save(path.join(slide_image_dir, f"{i+1}.png"))
         if args.model_name_t not in token_usage.keys(): 
             token_usage[args.model_name_t] = [usage_slide]
         else: token_usage[args.model_name_t].append(usage_slide)
